@@ -1,0 +1,7 @@
+{
+  "name": "Trí Tuệ Khảo Thí",
+  "description": "An intelligent exam creation tool for Vietnamese primary school teachers, powered by AI. This application assists in generating curriculum-aligned questions, building exam matrices, and creating print-ready tests based on Vietnam's educational standards (Circular 27 & 32).",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
