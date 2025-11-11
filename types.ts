@@ -142,6 +142,7 @@ export interface BackupData {
     matrices?: SavedExam[];
     academicYears?: AcademicYear[];
     knowledgeSources?: KnowledgeSource[];
+    outputs?: StudioOutput[];
 }
 
 // --- Types for NotebookView ---

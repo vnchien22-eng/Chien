@@ -1,10 +1,11 @@
-import React from 'react';
-import type { ExamInfo, Question, MatrixStructureItem, AiParams, ModalConfig, SavedExam, KnowledgeSource } from '../../types';
+import React, { useState } from 'react';
+import type { ExamInfo, Question, MatrixStructureItem, AiParams, ModalConfig, SavedExam, KnowledgeSource, StudioOutput } from '../../types';
 import { InputField } from '../ui/InputField';
 import { ActionButton } from '../ui/ActionButton';
-import { IconPlus, IconSpinner, IconSave, IconHistory } from '../ui/Icons';
+import { IconPlus, IconSpinner, IconSave, IconHistory, IconKnowledgeBase } from '../ui/Icons';
 import { AIAssistant } from './AIAssistant';
 import { QuestionItem } from './QuestionItem';
+import { NotebookView } from './NotebookView';
 
 interface ExamCreatorProps {
     examInfo: ExamInfo;
@@ -46,6 +47,11 @@ interface ExamCreatorProps {
     currentAcademicYear: string;
     savedExams: SavedExam[];
     knowledgeSources: KnowledgeSource[];
+    setKnowledgeSources: React.Dispatch<React.SetStateAction<KnowledgeSource[]>>;
+    studioOutputs: StudioOutput[];
+    setStudioOutputs: React.Dispatch<React.SetStateAction<StudioOutput[]>>;
+    isDriveConnected: boolean;
+    onDriveConnect: () => void;
     handleAiParamsChange: (levelKey: 'level1' | 'level2' | 'level3', typeKey: string, field: 'count' | 'points', value: number | string) => void;
     handleTopicChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleTopicSelect: (topic: string) => void;
@@ -119,9 +125,11 @@ export const ExamCreator: React.FC<ExamCreatorProps> = (props) => {
         handleGenerateSingleQuestion, handlePreviewImage, handleSave, setIsHistoryModalOpen,
         pastedContent, setPastedContent,
         handleAnalyzePastedContent, isAnalyzingPastedContent, handleAnalyzeFileContent, isAnalyzingFile,
-        currentAcademicYear, savedExams, knowledgeSources,
+        currentAcademicYear, savedExams, knowledgeSources, setKnowledgeSources, studioOutputs, setStudioOutputs, isDriveConnected, onDriveConnect,
         handleAiParamsChange, handleTopicChange, handleTopicSelect, groundingSources
     } = props;
+
+    const [isNotebookVisible, setIsNotebookVisible] = useState(true);
 
     const calculatedMatrixData = React.useMemo(() => {
         const data: { [key: string]: any } = {};
@@ -175,111 +183,137 @@ export const ExamCreator: React.FC<ExamCreatorProps> = (props) => {
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-            <div className="text-center mb-8">
-                <h1 
-                    className="text-2xl sm:text-3xl font-bold uppercase bg-gradient-to-r from-blue-500 via-blue-800 to-black text-transparent bg-clip-text transition-opacity hover:opacity-80"
-                    style={{ textShadow: '0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.4), 0 0 15px rgba(255, 255, 255, 0.3)' }}
-                >
-                    Ứng dụng Tạo Đề Kiểm Tra Thông Minh
-                </h1>
-                <p className="text-gray-500 mt-2">Hỗ trợ giáo viên tiểu học theo Thông tư 27 & 32</p>
+        <div>
+            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-8">
+                <button onClick={() => setIsNotebookVisible(!isNotebookVisible)} className="w-full flex justify-between items-center text-left focus:outline-none">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+                        <IconKnowledgeBase className="w-8 h-8 mr-3 text-indigo-600" />
+                        Sổ tay AI (Notebook)
+                    </h2>
+                    <svg className={`w-6 h-6 text-gray-600 transition-transform duration-300 ${isNotebookVisible ? 'transform rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                 {isNotebookVisible && (
+                    <div className="mt-6">
+                        <NotebookView 
+                            knowledgeSources={knowledgeSources}
+                            setKnowledgeSources={setKnowledgeSources}
+                            studioOutputs={studioOutputs}
+                            setStudioOutputs={setStudioOutputs}
+                            isDriveConnected={isDriveConnected}
+                            onDriveConnect={onDriveConnect}
+                        />
+                    </div>
+                )}
             </div>
-            
 
-            <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                    <InputField label="Tên trường" id="schoolName" value={examInfo.schoolName} onChange={handleExamInfoChange} placeholder="VD: Trường Tiểu học Mẫu"/>
-                    <InputField label="Lớp" id="className" value={examInfo.className} onChange={handleExamInfoChange} placeholder="VD: Lớp 5A"/>
-                    <InputField label="Môn học" id="subject" value={examInfo.subject} onChange={handleExamInfoChange} placeholder="VD: Toán"/>
-                    <div className="flex space-x-2">
-                        <div className="flex-grow">
-                            <InputField label="Thời gian làm bài" id="examTime" value={examInfo.examTime} onChange={handleExamInfoChange} placeholder="VD: 40 phút"/>
+            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+                <div className="text-center mb-8">
+                    <h1 
+                        className="text-2xl sm:text-3xl font-bold uppercase bg-gradient-to-r from-blue-500 via-blue-800 to-black text-transparent bg-clip-text transition-opacity hover:opacity-80"
+                        style={{ textShadow: '0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.4), 0 0 15px rgba(255, 255, 255, 0.3)' }}
+                    >
+                        Ứng dụng Tạo Đề Kiểm Tra Thông Minh
+                    </h1>
+                    <p className="text-gray-500 mt-2">Hỗ trợ giáo viên tiểu học theo Thông tư 27 & 32</p>
+                </div>
+                
+
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                        <InputField label="Tên trường" id="schoolName" value={examInfo.schoolName} onChange={handleExamInfoChange} placeholder="VD: Trường Tiểu học Mẫu"/>
+                        <InputField label="Lớp" id="className" value={examInfo.className} onChange={handleExamInfoChange} placeholder="VD: Lớp 5A"/>
+                        <InputField label="Môn học" id="subject" value={examInfo.subject} onChange={handleExamInfoChange} placeholder="VD: Toán"/>
+                        <div className="flex space-x-2">
+                            <div className="flex-grow">
+                                <InputField label="Thời gian làm bài" id="examTime" value={examInfo.examTime} onChange={handleExamInfoChange} placeholder="VD: 40 phút"/>
+                            </div>
+                            <button onClick={handleAnalyzeSubject} disabled={isAnalyzingSubject} className="self-end mb-1 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400">
+                               {isAnalyzingSubject ? <IconSpinner/> : '✨ Phân tích Môn học'}
+                            </button>
                         </div>
-                        <button onClick={handleAnalyzeSubject} disabled={isAnalyzingSubject} className="self-end mb-1 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400">
-                           {isAnalyzingSubject ? <IconSpinner/> : '✨ Phân tích Môn học'}
+                    </div>
+                    <InputField label="Tiêu đề/Tên bài kiểm tra" id="examTitle" value={examInfo.examTitle} onChange={handleExamInfoChange} placeholder="VD: Kiểm tra cuối học kỳ I"/>
+                </div>
+                
+                <AIAssistant 
+                    examInfo={examInfo}
+                    params={aiParams} 
+                    onParamsChange={handleAiParamsChange}
+                    onTopicChange={handleTopicChange}
+                    onGenerateFromMatrix={handleGenerateAIQuestions}
+                    isLoading={isLoadingAI}
+                    onSuggestMatrix={handleSuggestMatrix}
+                    onSuggestDistribution={handleSuggestDistribution}
+                    isLoadingMatrix={isLoadingMatrix}
+                    matrixData={calculatedMatrixData}
+                    matrixStructure={matrixStructure}
+                    onYccdChange={handleYccdChange}
+                    showNotification={showNotification}
+                    onTopicSelect={handleTopicSelect}
+                    pastedContent={pastedContent} setPastedContent={setPastedContent}
+                    onAnalyzePastedContent={handleAnalyzePastedContent}
+                    isAnalyzingPastedContent={isAnalyzingPastedContent}
+                    onAnalyzeFile={handleAnalyzeFileContent}
+                    isAnalyzingFile={isAnalyzingFile}
+                    currentAcademicYear={currentAcademicYear}
+                    savedExams={savedExams}
+                    knowledgeSources={knowledgeSources}
+                />
+
+                <div id="questions-container" className="space-y-6 pt-6 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-gray-800">Soạn thảo Câu hỏi</h3>
+                        <button
+                            type="button"
+                            onClick={() => setIsHistoryModalOpen(true)}
+                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                            <IconHistory className="w-5 h-5 mr-2" />
+                            Lịch sử
                         </button>
                     </div>
-                </div>
-                <InputField label="Tiêu đề/Tên bài kiểm tra" id="examTitle" value={examInfo.examTitle} onChange={handleExamInfoChange} placeholder="VD: Kiểm tra cuối học kỳ I"/>
-            </div>
-            
-            <AIAssistant 
-                examInfo={examInfo}
-                params={aiParams} 
-                onParamsChange={handleAiParamsChange}
-                onTopicChange={handleTopicChange}
-                onGenerateFromMatrix={handleGenerateAIQuestions}
-                isLoading={isLoadingAI}
-                onSuggestMatrix={handleSuggestMatrix}
-                onSuggestDistribution={handleSuggestDistribution}
-                isLoadingMatrix={isLoadingMatrix}
-                matrixData={calculatedMatrixData}
-                matrixStructure={matrixStructure}
-                onYccdChange={handleYccdChange}
-                showNotification={showNotification}
-                onTopicSelect={handleTopicSelect}
-                pastedContent={pastedContent} setPastedContent={setPastedContent}
-                onAnalyzePastedContent={handleAnalyzePastedContent}
-                isAnalyzingPastedContent={isAnalyzingPastedContent}
-                onAnalyzeFile={handleAnalyzeFileContent}
-                isAnalyzingFile={isAnalyzingFile}
-                currentAcademicYear={currentAcademicYear}
-                savedExams={savedExams}
-                knowledgeSources={knowledgeSources}
-            />
 
-            <div id="questions-container" className="space-y-6 pt-6 border-t border-gray-200">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-gray-800">Soạn thảo Câu hỏi</h3>
-                    <button
-                        type="button"
-                        onClick={() => setIsHistoryModalOpen(true)}
-                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                        <IconHistory className="w-5 h-5 mr-2" />
-                        Lịch sử
+                {questions.map((q, index) => (
+                        <QuestionItem 
+                            key={q.id}
+                            question={q} 
+                            index={index + 1}
+                            onUpdate={updateQuestion}
+                            onRemove={removeQuestion}
+                            onGenerateVariation={handleGenerateVariation}
+                            onImageUploadAndProcess={handleImageUploadAndProcess}
+                            onGenerateCharacterVariation={handleGenerateCharacterVariation}
+                            isVarying={varyingQuestionId === q.id}
+                            matrixStructure={matrixStructure}
+                            onGenerateSingleQuestion={handleGenerateSingleQuestion}
+                            isGenerating={generatingQuestionId === q.id}
+                            onPreviewImage={handlePreviewImage}
+                            examInfo={examInfo}
+                        />
+                ))}
+                </div>
+                
+                {groundingSources && groundingSources.length > 0 && <GroundingSourcesDisplay sources={groundingSources} />}
+
+                <div className="flex justify-start mt-6 space-x-2">
+                    <button type="button" onClick={() => addQuestion()} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <IconPlus /> Thêm câu hỏi thủ công
                     </button>
                 </div>
 
-            {questions.map((q, index) => (
-                    <QuestionItem 
-                        key={q.id}
-                        question={q} 
-                        index={index + 1}
-                        onUpdate={updateQuestion}
-                        onRemove={removeQuestion}
-                        onGenerateVariation={handleGenerateVariation}
-                        onImageUploadAndProcess={handleImageUploadAndProcess}
-                        onGenerateCharacterVariation={handleGenerateCharacterVariation}
-                        isVarying={varyingQuestionId === q.id}
-                        matrixStructure={matrixStructure}
-                        onGenerateSingleQuestion={handleGenerateSingleQuestion}
-                        isGenerating={generatingQuestionId === q.id}
-                        onPreviewImage={handlePreviewImage}
-                        examInfo={examInfo}
-                    />
-            ))}
-            </div>
-            
-            {groundingSources && groundingSources.length > 0 && <GroundingSourcesDisplay sources={groundingSources} />}
 
-            <div className="flex justify-start mt-6 space-x-2">
-                <button type="button" onClick={() => addQuestion()} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                    <IconPlus /> Thêm câu hỏi thủ công
-                </button>
-            </div>
-
-
-            <div className="mt-10 pt-6 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end sm:space-x-4 space-y-3 sm:space-y-0">
-                <ActionButton onClick={clearForm} text="Xóa toàn bộ" color="gray" />
-                <ActionButton onClick={handleSave} text="Lưu" color="blue">
-                     <>
-                        <IconSave />
-                        <span className="ml-2">Lưu</span>
-                    </>
-                </ActionButton>
-                <ActionButton onClick={() => setCurrentPage('preview')} text="Xem trước & Tạo đề" color="green" />
+                <div className="mt-10 pt-6 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end sm:space-x-4 space-y-3 sm:space-y-0">
+                    <ActionButton onClick={clearForm} text="Xóa toàn bộ" color="gray" />
+                    <ActionButton onClick={handleSave} text="Lưu" color="blue">
+                         <>
+                            <IconSave />
+                            <span className="ml-2">Lưu</span>
+                        </>
+                    </ActionButton>
+                    <ActionButton onClick={() => setCurrentPage('preview')} text="Xem trước & Tạo đề" color="green" />
+                </div>
             </div>
         </div>
     );

@@ -18,7 +18,7 @@ import { GenerationHistoryModal } from './components/creator/GenerationHistoryMo
 import { Chatbot } from './components/chatbot/Chatbot';
 import { MatrixBackground } from './components/layout/MatrixBackground';
 
-import type { ExamInfo, Question, MatrixStructureItem, AiParams, ModalConfig, SavedExam, AcademicYear, KnowledgeSource, CategoryItem, BackupData } from './types';
+import type { ExamInfo, Question, MatrixStructureItem, AiParams, ModalConfig, SavedExam, AcademicYear, KnowledgeSource, CategoryItem, BackupData, StudioOutput } from './types';
 import * as geminiService from './services/geminiService';
 import { systemExams, systemKnowledgeSources, mockCurriculumDatabase } from './data';
 
@@ -65,6 +65,7 @@ export const App: React.FC = () => {
     const [generationHistory, setGenerationHistory] = useState<Question[][]>([]);
     const [savedExams, setSavedExams] = useState<SavedExam[]>([]);
     const [knowledgeSources, setKnowledgeSources] = useState<KnowledgeSource[]>([]);
+    const [studioOutputs, setStudioOutputs] = useState<StudioOutput[]>([]);
     const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
     const [categories, setCategories] = useState({
         subjects: [{ id: 's1', name: 'Toán'}, {id: 's2', name: 'Tiếng Việt'}],
@@ -81,6 +82,7 @@ export const App: React.FC = () => {
                     const data: BackupData = JSON.parse(savedDataString);
                     setSavedExams([...systemExams, ...(data.exams || [])]);
                     setKnowledgeSources([...systemKnowledgeSources, ...(data.knowledgeSources || [])]);
+                    setStudioOutputs(data.outputs || []);
                     setAcademicYears(data.academicYears || [{ id: '2023-2024', name: '2023-2024', isCurrent: true }]);
                 } else {
                     setSavedExams(systemExams);
@@ -99,15 +101,26 @@ export const App: React.FC = () => {
             const data: BackupData = {
                 exams: regularExams,
                 knowledgeSources: userSources,
+                outputs: studioOutputs,
                 academicYears: academicYears
             };
             localStorage.setItem('trituekhaothi_backup', JSON.stringify(data));
         } catch (e) { console.error("Failed to save data to localStorage", e); }
-    }, [savedExams, knowledgeSources, academicYears]);
+    }, [savedExams, knowledgeSources, studioOutputs, academicYears]);
 
     useEffect(() => {
         backupData();
     }, [backupData]);
+
+    const handleDriveConnect = useCallback(() => {
+        setIsDriveConnected(true);
+        setDriveUser({ name: 'Demo User', email: 'demo@example.com' });
+    }, []);
+
+    const handleDriveDisconnect = useCallback(() => {
+        setIsDriveConnected(false);
+        setDriveUser(null);
+    }, []);
 
     // FIX: Add useMemo to fix 'Cannot find name useMemo' error.
     const currentAcademicYear = useMemo(() => academicYears.find(y => y.isCurrent)?.name || 'N/A', [academicYears]);
@@ -420,6 +433,11 @@ export const App: React.FC = () => {
                     currentAcademicYear={currentAcademicYear}
                     savedExams={savedExams}
                     knowledgeSources={knowledgeSources}
+                    setKnowledgeSources={setKnowledgeSources}
+                    studioOutputs={studioOutputs}
+                    setStudioOutputs={setStudioOutputs}
+                    isDriveConnected={isDriveConnected}
+                    onDriveConnect={handleDriveConnect}
                     handleAiParamsChange={(levelKey, typeKey, field, value) => {
                          setAiParams(p => ({...p, [levelKey]: {...p[levelKey], [typeKey]: {...p[levelKey][typeKey as 'mc'], [field]: value}}}));
                     }}
@@ -454,8 +472,6 @@ export const App: React.FC = () => {
                 return <ImageEnhancer />;
             case 'exam-library':
                 return <ExamLibraryPage exams={savedExams} onLoad={handleLoadExam} onDelete={handleDeleteExam} />;
-            case 'notebook-view':
-                return <NotebookView knowledgeSources={knowledgeSources} setKnowledgeSources={setKnowledgeSources} isDriveConnected={isDriveConnected} onDriveConnect={()=>{}} />;
             case 'talent-training':
                 return <TalentTrainingPage />;
             case 'exam-analyzer':
@@ -469,8 +485,8 @@ export const App: React.FC = () => {
                     onDeleteAcademicYear={id => setAcademicYears(p => p.filter(y => y.id !== id))}
                     isDriveConnected={isDriveConnected}
                     driveUser={driveUser}
-                    onDriveConnect={() => {setIsDriveConnected(true); setDriveUser({name: 'Demo User', email: 'demo@example.com'})}}
-                    onDriveDisconnect={() => {setIsDriveConnected(false); setDriveUser(null)}}
+                    onDriveConnect={handleDriveConnect}
+                    onDriveDisconnect={handleDriveDisconnect}
                     subjects={categories.subjects} gradeLevels={categories.gradeLevels} examTypes={categories.examTypes}
                     onCategoryChange={handleCategoryChange}
                  />;

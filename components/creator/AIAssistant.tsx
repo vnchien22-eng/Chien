@@ -86,8 +86,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     return (
         <div className="mt-8 pt-6 border-t border-gray-200">
             <h2 className="text-xl font-bold text-gray-800 text-center mb-4">Trợ lý AI Soạn đề</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Left Panel: AI Controls */}
+            <div className="space-y-8">
+                {/* AI Controls Panel */}
                 <div className="space-y-4">
                     {/* FIX: Use the correct `onTopicSelect` handler for `onValueChange` and speech input. Removed the incorrect `onChange` prop which interfered with AutocompleteInput's internal logic. */}
                     <AutocompleteInput 
@@ -151,7 +151,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                     </div>
                 </div>
 
-                {/* Right Panel: Matrix Preview */}
+                {/* Matrix Preview Panel */}
                 <div className="space-y-4">
                     <MatrixProgressBar level1Percent={percentages.level1} level2Percent={percentages.level2} level3Percent={percentages.level3} totalPoints={totalPoints} />
                     <MatrixTable data={matrixData} structure={matrixStructure} onYccdChange={onYccdChange} examInfo={examInfo} aiParams={params} currentAcademicYear={currentAcademicYear} />
