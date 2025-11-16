@@ -166,3 +166,65 @@ export interface StudioOutput {
     title: string;
     content: any; // string for markdown, QuizQuestion[] for quiz, base64 for audio
 }
+
+export interface DocumentReference {
+    code: string;
+    title: string;
+    summary: string;
+    application: string;
+}
+
+export interface ModulePlan {
+    id: string;
+    theme: string;
+    duration: string;
+    objectives: string[];
+    digitalFocus: string;
+    assessment: string;
+    resources: string[];
+}
+
+export interface DigitalProject {
+    title: string;
+    description: string;
+    output: string;
+    weeks: string;
+}
+
+export interface WeeklyStructure {
+    total: string;
+    digitalTime: string;
+    highlights: string[];
+}
+
+export interface CompetencyTarget {
+    name: string;
+    description: string;
+    linkedDocuments: string[];
+}
+
+export interface GradeCurriculum {
+    grade: string;
+    summary: string;
+    keyFocus: string;
+    weeklyStructure: WeeklyStructure;
+    competencyTargets: CompetencyTarget[];
+    modules: ModulePlan[];
+    digitalProjects: DigitalProject[];
+    guidingDocuments: DocumentReference[];
+    digitalPillars: string[];
+    assessmentPlan: {
+        approach: string;
+        methods: string[];
+        evidence: string;
+    };
+    sourceNotes: string;
+}
+
+export interface DigitalCompetencyPillar {
+    id: string;
+    title: string;
+    description: string;
+    reference: string;
+    classroomActions: string[];
+}
